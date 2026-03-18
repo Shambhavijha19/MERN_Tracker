@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const mysqlUser = require('../models/mysqlUser');
 const { validationResult } = require('express-validator');
 
 const generateToken = (id) => {
@@ -19,7 +18,7 @@ exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await mysqlUser.findByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -27,27 +26,22 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Create new user
-    const user = new User({
+    // Create new user in MySQL auth store
+    const user = await mysqlUser.createUser({
       name,
       email,
-      password, // Password will be hashed by the pre-save middleware
-      currency: 'INR', // Set default currency to INR
-      isEmailVerified: true // For simplicity, we're setting this to true
-      // No default data - each user starts with a blank slate
+      password,
+      currency: 'INR'
     });
 
-    // Save user to database
-    await user.save();
-
     // Generate JWT token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
 
     res.status(201).json({
       success: true,
       data: {
         token,
-        user: user.getProfile()
+        user
       }
     });
   } catch (error) {
@@ -69,7 +63,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const user = await User.findOne({ email }).select('+password');
+    const user = await mysqlUser.findByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -78,7 +72,7 @@ exports.login = async (req, res) => {
     }
 
     // Check if password matches
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await mysqlUser.comparePassword(password, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -87,17 +81,25 @@ exports.login = async (req, res) => {
     }
 
     // Update last login time
-    user.lastLogin = Date.now();
-    await user.save({ validateBeforeSave: false });
+    await mysqlUser.updateLastLogin(user.id);
 
     // Generate JWT token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
 
     res.status(200).json({
       success: true,
       data: {
         token,
-        user: user.getProfile()
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+          currency: user.currency,
+          createdAt: user.createdAt
+        }
       }
     });
   } catch (error) {
@@ -111,7 +113,7 @@ exports.login = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await mysqlUser.findById(req.user.id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -121,7 +123,7 @@ exports.getMe = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: user.getProfile()
+      data: user
     });
   } catch (error) {
     console.error('Get current user error:', error);
@@ -144,7 +146,7 @@ exports.updateProfile = async (req, res) => {
   const { name, currency } = req.body;
 
   try {
-    const user = await User.findById(req.user.id);
+    const user = await mysqlUser.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({
@@ -153,17 +155,12 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    // Update fields
-    if (name) user.name = name;
-    if (currency) user.currency = currency;
-
-    // Save updated user
-    await user.save();
+    const updatedUser = await mysqlUser.updateProfile(req.user.id, { name, currency });
 
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      data: user.getProfile()
+      data: updatedUser
     });
   } catch (error) {
     console.error('Update profile error:', error);
@@ -186,7 +183,7 @@ exports.changePassword = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   try {
-    const user = await User.findById(req.user.id).select('+password');
+    const user = await mysqlUser.findByEmail(req.user.email);
 
     if (!user) {
       return res.status(404).json({
@@ -196,7 +193,7 @@ exports.changePassword = async (req, res) => {
     }
 
     // Check if current password is correct
-    const isMatch = await user.comparePassword(currentPassword);
+    const isMatch = await mysqlUser.comparePassword(currentPassword, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -205,8 +202,7 @@ exports.changePassword = async (req, res) => {
     }
 
     // Update password
-    user.password = newPassword; // Will be hashed by pre-save middleware
-    await user.save();
+    await mysqlUser.updatePassword(req.user.id, newPassword);
 
     res.status(200).json({
       success: true,

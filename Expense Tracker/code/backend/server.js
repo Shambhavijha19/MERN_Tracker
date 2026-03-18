@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const { initializeMySQL } = require('./config/mysql');
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +16,16 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Connect to MongoDB
 connectDB();
+
+// Connect to MySQL (used for authentication data)
+initializeMySQL()
+  .then(() => {
+    console.log('MySQL Connected');
+  })
+  .catch((error) => {
+    console.error(`Error connecting to MySQL: ${error.message}`);
+    process.exit(1);
+  });
 
 // Initialize Express app
 const app = express();

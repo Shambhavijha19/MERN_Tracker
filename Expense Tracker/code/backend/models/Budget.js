@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const BudgetSchema = new mongoose.Schema({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   name: {
@@ -20,8 +19,8 @@ const BudgetSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Category is required'],
     enum: [
-      'Housing', 'Transportation', 'Food', 'Utilities', 
-      'Insurance', 'Healthcare', 'Debt', 'Personal', 
+      'Housing', 'Transportation', 'Food', 'Utilities',
+      'Insurance', 'Healthcare', 'Debt', 'Personal',
       'Entertainment', 'Education', 'Clothing', 'Gifts',
       'Savings', 'Investments', 'Taxes', 'Other'
     ]
@@ -35,7 +34,7 @@ const BudgetSchema = new mongoose.Schema({
   startDate: {
     type: Date,
     required: [true, 'Start date is required'],
-    default: function() {
+    default: function () {
       const now = new Date();
       return new Date(now.getFullYear(), now.getMonth(), 1); // First day of current month
     }
@@ -43,7 +42,7 @@ const BudgetSchema = new mongoose.Schema({
   endDate: {
     type: Date,
     required: [true, 'End date is required'],
-    default: function() {
+    default: function () {
       const now = new Date();
       return new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of current month
     }
@@ -77,15 +76,15 @@ const BudgetSchema = new mongoose.Schema({
 });
 
 // Virtual for calculating spent amount (will be populated when queried)
-BudgetSchema.virtual('spent').get(function() {
+BudgetSchema.virtual('spent').get(function () {
   return this._spent || 0;
 });
 
-BudgetSchema.virtual('remaining').get(function() {
+BudgetSchema.virtual('remaining').get(function () {
   return (this.amount + this.rolloverAmount) - (this._spent || 0);
 });
 
-BudgetSchema.virtual('percentUsed').get(function() {
+BudgetSchema.virtual('percentUsed').get(function () {
   if (this.amount + this.rolloverAmount === 0) return 0;
   return Math.min(100, Math.round((this._spent || 0) / (this.amount + this.rolloverAmount) * 100));
 });

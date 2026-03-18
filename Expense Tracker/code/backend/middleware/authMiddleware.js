@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const mysqlUser = require('../models/mysqlUser');
 
 // Middleware to protect routes
 exports.protect = async (req, res, next) => {
@@ -18,7 +18,7 @@ exports.protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findById(decoded.id);
+    const user = await mysqlUser.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({
@@ -29,7 +29,7 @@ exports.protect = async (req, res, next) => {
 
     // Set user ID in request object for controllers to use
     // This ensures each user only accesses their own data
-    req.user = { id: user._id };
+    req.user = { id: String(user.id), email: user.email, role: user.role };
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
@@ -45,7 +45,7 @@ exports.protect = async (req, res, next) => {
 exports.restrictTo = (...roles) => {
   return async (req, res, next) => {
     try {
-      const user = await User.findById(req.user.id);
+      const user = await mysqlUser.findById(req.user.id);
 
       if (!user) {
         return res.status(401).json({

@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const ExpenseSchema = new mongoose.Schema({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   amount: {
@@ -20,8 +19,8 @@ const ExpenseSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Category is required'],
     enum: [
-      'Housing', 'Transportation', 'Food', 'Utilities', 
-      'Insurance', 'Healthcare', 'Debt', 'Personal', 
+      'Housing', 'Transportation', 'Food', 'Utilities',
+      'Insurance', 'Healthcare', 'Debt', 'Personal',
       'Entertainment', 'Education', 'Clothing', 'Gifts',
       'Savings', 'Investments', 'Taxes', 'Other'
     ]

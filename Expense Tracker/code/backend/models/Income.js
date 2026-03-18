@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const IncomeSchema = new mongoose.Schema({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   amount: {
@@ -20,8 +19,8 @@ const IncomeSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Source is required'],
     enum: [
-      'Salary', 'Freelance', 'Business', 'Investments', 
-      'Dividends', 'Rental', 'Interest', 'Gifts', 
+      'Salary', 'Freelance', 'Business', 'Investments',
+      'Dividends', 'Rental', 'Interest', 'Gifts',
       'Refunds', 'Sale', 'Other'
     ]
   },

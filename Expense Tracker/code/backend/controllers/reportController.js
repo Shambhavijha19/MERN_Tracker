@@ -1,6 +1,5 @@
 const Expense = require('../models/Expense');
 const Income = require('../models/Income');
-const mongoose = require('mongoose');
 
 // @desc    Get financial summary
 // @route   GET /api/reports/summary
@@ -35,7 +34,7 @@ exports.getFinancialSummary = async (req, res) => {
     const expenseTotal = await Expense.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },
@@ -51,7 +50,7 @@ exports.getFinancialSummary = async (req, res) => {
     const incomeTotal = await Income.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },
@@ -67,7 +66,7 @@ exports.getFinancialSummary = async (req, res) => {
     const expensesByCategory = await Expense.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },
@@ -86,7 +85,7 @@ exports.getFinancialSummary = async (req, res) => {
     const incomeBySource = await Income.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },
@@ -155,7 +154,7 @@ exports.getCashFlow = async (req, res) => {
     const monthlyExpenses = await Expense.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },
@@ -177,7 +176,7 @@ exports.getCashFlow = async (req, res) => {
     const monthlyIncome = await Income.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },
@@ -293,7 +292,7 @@ exports.getExpenseTrends = async (req, res) => {
     const expensesByCategory = await Expense.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },
@@ -316,7 +315,7 @@ exports.getExpenseTrends = async (req, res) => {
     const categoriesResult = await Expense.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(req.user.id.toString()),
+          user: req.user.id.toString(),
           date: { $gte: startDate, $lte: endDate }
         }
       },

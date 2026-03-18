@@ -1,7 +1,6 @@
 const Budget = require('../models/Budget');
 const Expense = require('../models/Expense');
 const { validationResult } = require('express-validator');
-const mongoose = require('mongoose');
 
 // @desc    Get all budgets for a user
 // @route   GET /api/budgets
@@ -305,7 +304,7 @@ const calculateBudgetSpent = async (budgetId, userId) => {
     const expenses = await Expense.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(userId),
+          user: userId.toString(),
           category: budget.category,
           date: {
             $gte: budget.startDate,
